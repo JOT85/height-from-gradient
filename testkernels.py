@@ -1,14 +1,6 @@
 from kernel import kernel
-from kernel import normalizex, normalizey
 
 xkernels = [
-	#kernel(normalizex([
-	#	[0, -1, 0, 1, 0],
-	#	[-1, -2, 0, 2, 1],
-	#	[-2, -5, 0, 5, 2],
-	#	[-1, -2, 0, 2, 1],
-	#	[0, -1, 0, 1, 0],
-	#])),
 	kernel(([
 		[-1/12, 0, 1/12],
 		[-1/3, 0, 1/3],
@@ -31,13 +23,6 @@ xkernels = [
 	])
 ]
 ykernels = [
-	#kernel(normalizey([
-	#	[0,  -1, -2, -1, 0],
-	#	[-1, -2, -5, -2, -1],
-	#	[0,   0,  0,  0, 0],
-	#	[1,   2,  5,  2, 1],
-	#	[0,   1,  2,  1, 0],
-	#])),
 	kernel([
 		[-1/12, -1/3, -1/12],
 		[0, 0, 0],
@@ -60,5 +45,5 @@ ykernels = [
 ]
 
 kernels = []
-kernels.extend(ykernels)
-kernels.extend(xkernels)
+kernels.extend(ykernels[::-1])
+kernels.extend(xkernels[::-1])

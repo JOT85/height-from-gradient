@@ -7,8 +7,6 @@ class mask:
 	def height(self):
 		return self.h
 	def get(self, x, y):
-		#if (y == 5 or y == 7) and (x == 6 or x == 8):
-		#	return False
 		if x == 0 and y == 0:
 			return False
 		if x < 0 or y < 0 or x >= self.w or y >= self.h:

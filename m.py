@@ -1,11 +1,22 @@
 from sparsematrix import matrix
-from fakemask import mask
 from kernel import kernel
 
+import numpy as np
+import scipy.sparse as sparse
+from scipy.sparse.linalg import lsqr
+
 class maskwrapper:
-	"""Wraps mask to provide utilities"""
+	"""Wraps mask to provide mapping, counting, matching, utilities"""
 	def __init__(self, mask, kernels=[], removeIsolationsSpeedy=False, createMap=False):
+		"""
+		Args:
+			mask The mask to wrap
+			kernels: List of kernels that will be used with this mask. If not empty, self.removeIsolationsFromKernels(kernels) is called.
+			removeIsolationsSpeedy: If True, self.removeIsolations() will be called. kernels will also be ignored.
+			createMap: If true, self.createMap will be called after removing any isolations from the given kernels.
+		"""
 		self.mask = mask
+		#Run the relivent isolation remover
 		if removeIsolationsSpeedy:
 			self.removeIsolations()
 		elif len(kernels) != 0:
@@ -13,10 +24,9 @@ class maskwrapper:
 		if createMap:
 			self.createMap()
 		else:
+			#We aren't creating a map, so initialize the parameters to nil values.
 			self.map = {}
 			self.c = 0
-			self.evens = []
-			self.odds = []
 	def createMap(self):
 		"""createMap resets and fills the map, linking each mask coordinate to its index in the sliced column vector"""
 		#Reset everything
@@ -34,7 +44,7 @@ class maskwrapper:
 						self.map[x] = {y: self.c}
 					self.c += 1
 	def get(self, x, y):
-		"""get the index of the given coordinate"""
+		"""get the index of the given coordinate (createMap must have been called first)"""
 		return self.map[x][y]
 	def count(self):
 		"""Returns the total amount of pixels contained by the mask when the map was last created"""
@@ -107,28 +117,13 @@ class maskwrapper:
 		if changed:
 			self.removeIsolationsFromKernels(kernels)
 
-def isEdge(wrapper, x, y):
-	return False
-	return (
-		(not wrapper.mask.get(x-1, y))
-		or (not wrapper.mask.get(x-1, y-1))
-		or (not wrapper.mask.get(x, y-1))
-		or (not wrapper.mask.get(x+1, y))
-		or (not wrapper.mask.get(x+1, y+1))
-		or (not wrapper.mask.get(x, y+1))
-		or (not wrapper.mask.get(x-2, y))
-		or (not wrapper.mask.get(x-2, y-1))
-		or (not wrapper.mask.get(x-2, y-2))
-		or (not wrapper.mask.get(x-1, y-2))
-		or (not wrapper.mask.get(x, y-2))
-		or (not wrapper.mask.get(x+2, y))
-		or (not wrapper.mask.get(x+2, y+1))
-		or (not wrapper.mask.get(x+2, y+2))
-		or (not wrapper.mask.get(x+1, y+2))
-		or (not wrapper.mask.get(x, y+2))
-	)
-
 def applyKernels(data, kernels):
+	"""
+	Creates a matrix, that will apply the first kernel where all the pixels needed are present within the mask to each pixel within the mask.
+	Args:
+		data: maskwrapper wrapping the mask that needs to be applied. removeIsolations (FromKernels?) and createMap must have been called before passing it to this function.
+		kernels: the list of kernels to apply, in order of priority (index 0 has highest priority).
+	"""	
 	#Create the output matrix
 	m = matrix(data.count(), data.count())
 	#c represents the nth pixel that we are applying the transform to
@@ -152,53 +147,47 @@ def applyKernels(data, kernels):
 	return m
 
 def createHeightNormMatrix(data):
-	norm = matrix(data.count(), 1)
-	others = matrix(data.count(), data.count())
-	othersY = 0
+	"""
+	Creates a martix, which the dot product of should be a column vector full of 0s for the heights to be normalized.
+	The first row has a 1 for every other pixel (with the mask layed on top, so not necisarily every other pixel in the final height vector), and thefore, when the product is 0, every other pixel will be averaged to 0.
+	The rest of the rows, then apply a a kernel to each pixel (if possible). This kernel averages all of the immediate horisontal and vertical naighbouring pixels, and subtracts the central pixel. Making this 0 would place its height in between its naighbours.
+	"""
+	out = matrix(data.count(), data.count()+1)
+	othersY = 1
+	#For every point in the mask
 	for x in range(data.mask.width()):
 		for y in range(data.mask.height()):
-			if data.mask.get(x, y) and not isEdge(data, x, y):
-				#xeven = x % 2 == 0
-				#yeven = y % 2 == 0
-				#if (yeven and xeven) or (not yeven and not xeven):
+			if data.mask.get(x, y):
+				#If both points are even, or both are odd, then it needs to be added the the norm matrix
 				if y % 2 == x % 2:
-					norm.set(data.get(x, y), 0, 1)
+					out.set(data.get(x, y), 0, 1)
 				elif data.mask.get(x-1, y) and data.mask.get(x+1, y) and data.mask.get(x, y-1) and data.mask.get(x, y+1):
-					others.set(data.get(x+1, y), othersY, 1)
-					others.set(data.get(x-1, y), othersY, 1)
-					others.set(data.get(x, y+1), othersY, 1)
-					others.set(data.get(x, y-1), othersY, 1)
-					others.set(data.get(x, y), othersY, -4)
+					out.set(data.get(x+1, y), othersY, 1)
+					out.set(data.get(x-1, y), othersY, 1)
+					out.set(data.get(x, y+1), othersY, 1)
+					out.set(data.get(x, y-1), othersY, 1)
+					out.set(data.get(x, y), othersY, -4)
 					othersY += 1
-	others.resize(data.count(), othersY)
-	return (norm, others)
-
-
-import numpy as np
-import scipy.sparse as sparse
-from scipy.sparse.linalg import lsqr
+	out.resize(data.count(), othersY)
+	return out
 
 def solve(wrapper, gx, gy, xkernels, ykernels, verbose=False):
+	"""Given the mask (wrapped), x gradient values, and y gradient values. Solve solves for the height map, using the given convolution kernels."""
 	if verbose: print("Generating Dx matrix...")
 	Dx = applyKernels(wrapper, xkernels)
 	if verbose: print("Generating Dy matrix...")
 	Dy = applyKernels(wrapper, ykernels)
 	if verbose: print("Generating normalization matrix...")
-	norm, others = createHeightNormMatrix(wrapper)
+	norm = createHeightNormMatrix(wrapper)
 	if verbose: print("Generating A and b matricies...")
-	#v1 = sparse.coo_matrix(np.full(wrapper.count(), 1, dtype=np.float_))
-	## A = [ Dx Dy 1k ]
-	# A = [ Dx Dy norm others ]
-	A = sparse.vstack([Dx.matrix, Dy.matrix, norm.matrix, others.matrix], format="coo")
-	print(norm.matrix.toarray())
-	for fu in others.matrix.toarray():
-		print(fu)
+	# A = [ Dx Dy norm ]
+	A = sparse.vstack([Dx.matrix, Dy.matrix, norm.matrix], format="coo")
 	# b = [ Gx Gy 0n ]
-	#b = np.concatenate((gx, gy, np.zeros((1, 1))))
-	b = np.concatenate((gx, gy, np.zeros(1+others.height())))
-	# Solve Az=b
+	b = np.concatenate((gx, gy, np.zeros(norm.height())))
+	# Solve Az=b for z
 	if verbose: print("Solving...")
 	return lsqr(A, b)[0]
 
 def normalize(v, wrapper):
+	"""Returns the given vector, however with all the points averaging to 0"""
 	return v - np.mean(v)

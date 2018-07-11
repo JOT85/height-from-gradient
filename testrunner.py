@@ -1,81 +1,54 @@
-import generater
+import generator
 import numpy as np
 import math
 import m
 import testkernels as kernels
 from plotheights import plot
 
-def checkGenerator():
-	m1, z1, dx1, dy1 = generater.generateSphereStuff(
-		np.ndarray((256, 256)),
-		np.ndarray((256, 256)),
-		np.ndarray((256, 256)),
-		59.9,
-		100,
-		100,
-	)
-
-	r2 = 59.9**2
-	def f(x, y):
-		z2 = r2 - (x-100)**2 - (y-100)**2
-		if z2 < 0:
-			return math.nan
-		return math.sqrt(z2)
-
-	m2, z2, dx2, dy2, _, _ , _ = generater.fromFunction(
-		f,
-		lambda x, y, z: (100-x)/z,
-		lambda x, y, z: (100-y)/z,
-		(0, 0),
-		(256, 256),
-	)
-
-	if m1.width() != m2.width() or m1.height() != m2.height():
-		raise RuntimeError("Mask dimensions not consistant")
-	for x in range(m1.width()):
-		for y in range(m1.height()):
-			if m1.get(x, y) != m2.get(x, y):
-				raise RuntimeError("Masks not equal")
-
-	def checkEqual(a, b, label):
-		if len(a) != len(b):
-			raise RuntimeError(label + " dimensions not consistant")
-		for i in range(len(a)):
-			if a[i][0] != b[i][0]:
-				raise RuntimeError(label + " not equal")
-
-	checkEqual(z1, z2, "z")
-	checkEqual(dx1, dx2, "dx")
-	checkEqual(dy1, dy2, "dy")
-
-	print("All good!!!")
-
 def compareValues(a, b):
+	"""Returns the average squared difference of all the values in the arrays a and b"""
 	if len(a) != len(b):
 		raise RuntimeError("vectors must be the same size to compare")
 	t = 0
 	for i in range(len(a)):
-		if (a[i]-b[i])**2 > 1000:
-			#print(i, a[i], b[i])
-			#print((a[i]-b[i])**2)
-			t += (a[i]-b[i])**2
+		t += (a[i]-b[i])**2
 	return t / len(a)
 
-def testFunction(f, start, end, dfdx=None, dfdy=None, noiseFunctions=(None, None), mask=None, step = 0.01, verbose=False, plotresults=False):
+def testFunction(f, start, end, kernels, xkernels, ykernels, dfdx=None, dfdy=None, noiseFunctions=(None, None), mask=None, step = 0.01, verbose=False, plotresults=False):
+	"""
+	Solves for the height (from the gradients) using the given kernels and compares the solved heights to the real heights.
+	
+	Args:
+		f: The function that maps x and y to z
+		start: The top left of the rectangle to be tested
+		end: The bottom right of the rectangle to be tested
+		kernels: A list of all the kernels that should be tested when removing isolations
+		xkernels: The kernels to use when calculating the x gradient
+		ykernels: The kernels to use when calculating the y gradient
+		dfdx: Should return the derivative with respect to x of f. If None, a partial derivative of f with step step will be used.
+		dfdy: Should return the derivative with respect to y of f. If None, a partial derivative of f with step step will be used.
+		noiseFunctions: noiseFunctions passed to generator.fromFunction
+		mask: If not none, this mask will be used, otherwise, all finite heights will be used.
+		step: The step to use when finding partial derivatives of f (only if dfdx or dfdy are None)
+		plotResults: If True, plotly will be used to plot the real and solved height values.
+		
+	Returns:
+		The average square difference between the solved and real height values.
+	"""
 	if verbose: print("Testing...")
 	if dfdx == None:
 		dfdx = lambda x, y, z: (f(x+step, y) - f(x-step, y))/(2*step)
 	if dfdy == None:
 		dfdy = lambda x, y, z: (f(x, y+step) - f(x, y-step))/(2*step)
-	wrapper, zv, dxv, dyv, zp, dxp, dyp = generater.fromFunction(f, dfdx, dfdy, start, end, kernels.kernels, noiseFunctions=noiseFunctions, mask=mask, verbose=verbose)
-	solved = m.solve(wrapper, dxv, dyv, kernels.xkernels, kernels.ykernels, verbose=verbose)
+	wrapper, zv, dxv, dyv, _, _, _ = generator.fromFunction(f, dfdx, dfdy, start, end, kernels, noiseFunctions=noiseFunctions, mask=mask, verbose=verbose)
+	solved = m.solve(wrapper, dxv, dyv, xkernels, ykernels, verbose=verbose)
 	if verbose: print("Comparing...")
 	zv = m.normalize(zv, wrapper)
-	print("Average difference squared:", compareValues(solved, zv))
 	if plotresults:
 		if verbose: print("Plotting...")
 		plot(zv, wrapper.mask, title="Real values", file="real.html")
 		plot(solved, wrapper.mask, "Solved values", file="solved.html")
+	return compareValues(solved, zv)
 
 def sphere(x, y):
 	z2 = 12.5**2 - (x-12.5)**2 - (y-12.5)**2
@@ -83,7 +56,7 @@ def sphere(x, y):
 		return math.nan
 	return math.sqrt(z2)
 
-testFunction(
+print("Average squared difference: ", testFunction(
 	#lambda x, y: (
 	#	19*(math.cos(x+3)**2)*y
 	#	+7*math.pow(y, 1/6)*math.log(x*x)
@@ -95,6 +68,9 @@ testFunction(
 	#lambda x, y: x**3-15*(x**2),
 	(0, 0),
 	(25, 25),
+	kernels.kernels,
+	kernels.xkernels,
+	kernels.ykernels,
 	#dfdx=lambda x, y, z: 3*x*x-30*x,
 	#dfdy=lambda x, y, z: 0,
 	dfdx=lambda x, y, z: (12.5-x)/z,
@@ -103,5 +79,5 @@ testFunction(
 	#dfdy=lambda x, y, z: 1.35*y**0.35,
 	verbose=True,
 	plotresults=True,
-)
+))
 print("Done.")
