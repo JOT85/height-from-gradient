@@ -21,7 +21,7 @@ class sphere:
 			return math.nan
 		return (self.cy-y)/z
 
-def testSphere(r, noiseFunctions=(None, None), verbose=False, plot=False):
+def testSphere(r, noiseFunctions=(None, None), verbose=False, plot=False, plotfileprefix=""):
 	s = sphere(r, r, r)
 	return testrunner.testFunction(
 		s.z,
@@ -34,9 +34,10 @@ def testSphere(r, noiseFunctions=(None, None), verbose=False, plot=False):
 		dfdy=s.dzdy,
 		verbose=verbose,
 		plotresults=plot,
+		plotfileprefix=plotfileprefix,
 	)
 	
-def testLinear(gx, gy, size, noiseFunctions=(None, None), verbose=False, plot=False):
+def testLinear(gx, gy, size, noiseFunctions=(None, None), verbose=False, plot=False, plotfileprefix=""):
 	return testrunner.testFunction(
 		lambda x, y: gx*x+gy*y,
 		(0, 0),
@@ -48,13 +49,14 @@ def testLinear(gx, gy, size, noiseFunctions=(None, None), verbose=False, plot=Fa
 		dfdy=lambda x, y, z: gy,
 		verbose=verbose,
 		plotresults=plot,
+		plotfileprefix=plotfileprefix,
 	)
 	
 print(testLinear(
 	2, 2, (12, 12),
-	plot=True
+	plot=True, plotfileprefix="linear.",
 ))
 print(testSphere(
-	6,
-	plot=True
+	60,
+	plot=True, plotfileprefix="sphere.",
 ))

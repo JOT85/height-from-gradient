@@ -1,7 +1,7 @@
 # height-from-gradient
 
 Utilities for creating a heightmap from a set of known gradients.  
-Along with utilities for testing the effectiveness of different kernels.
+Along with utilities for testing the effectiveness of different kernels. tests.py is a script that runs some tests using the kernels form the testkernels module.
 
 ## m module
 Provides:  

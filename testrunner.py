@@ -14,7 +14,7 @@ def compareValues(a, b):
 		t += (a[i]-b[i])**2
 	return t / len(a)
 
-def testFunction(f, start, end, kernels, xkernels, ykernels, dfdx=None, dfdy=None, noiseFunctions=(None, None), mask=None, step = 0.01, verbose=False, plotresults=False):
+def testFunction(f, start, end, kernels, xkernels, ykernels, dfdx=None, dfdy=None, noiseFunctions=(None, None), mask=None, step = 0.01, verbose=False, plotresults=False, plotfileprefix=""):
 	"""
 	Solves for the height (from the gradients) using the given kernels and compares the solved heights to the real heights.
 	
@@ -44,9 +44,10 @@ def testFunction(f, start, end, kernels, xkernels, ykernels, dfdx=None, dfdy=Non
 	solved = m.solve(wrapper, dxv, dyv, xkernels, ykernels, verbose=verbose)
 	if verbose: print("Comparing...")
 	zv = m.normalize(zv, wrapper)
+	solved = m.normalize(solved, wrapper)
 	if plotresults:
 		if verbose: print("Plotting...")
-		plot(zv, wrapper.mask, title="Real values", file="real.html")
-		plot(solved, wrapper.mask, "Solved values", file="solved.html")
+		plot(zv, wrapper.mask, title="Real values", file=plotfileprefix+"real.html")
+		plot(solved, wrapper.mask, "Solved values", file=plotfileprefix+"solved.html")
 	return compareValues(solved, zv)
 
