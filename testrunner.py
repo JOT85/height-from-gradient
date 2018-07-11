@@ -56,28 +56,29 @@ def sphere(x, y):
 		return math.nan
 	return math.sqrt(z2)
 
-print("Average squared difference: ", testFunction(
-	#lambda x, y: (
-	#	19*(math.cos(x+3)**2)*y
-	#	+7*math.pow(y, 1/6)*math.log(x*x)
-	#	-15*math.sin(y*y*x-160*math.tan(y))*x
-	#),
-	#lambda x, y: 5*y*math.log(x),
-	sphere,
-	#lambda x, y: x**1.35+y**1.25,
-	#lambda x, y: x**3-15*(x**2),
-	(0, 0),
-	(25, 25),
-	kernels.kernels,
-	kernels.xkernels,
-	kernels.ykernels,
-	#dfdx=lambda x, y, z: 3*x*x-30*x,
-	#dfdy=lambda x, y, z: 0,
-	dfdx=lambda x, y, z: (12.5-x)/z,
-	dfdy=lambda x, y, z: (12.5-y)/z,
-	#dfdx=lambda x, y, z: 1.35*x**0.35,
-	#dfdy=lambda x, y, z: 1.35*y**0.35,
-	verbose=True,
-	plotresults=True,
-))
-print("Done.")
+def demo():
+	print("Average squared difference: ", testFunction(
+		#lambda x, y: (
+		#	19*(math.cos(x+3)**2)*y
+		#	+7*math.pow(y, 1/6)*math.log(x*x)
+		#	-15*math.sin(y*y*x-160*math.tan(y))*x
+		#),
+		#lambda x, y: 5*y*math.log(x),
+		sphere,
+		#lambda x, y: x**1.35+y**1.25,
+		#lambda x, y: x**3-15*(x**2),
+		(0, 0),
+		(25, 25),
+		kernels.kernels,
+		kernels.xkernels,
+		kernels.ykernels,
+		#dfdx=lambda x, y, z: 3*x*x-30*x,
+		#dfdy=lambda x, y, z: 0,
+		dfdx=lambda x, y, z: (12.5-x)/z,
+		dfdy=lambda x, y, z: (12.5-y)/z,
+		#dfdx=lambda x, y, z: 1.35*x**0.35,
+		#dfdy=lambda x, y, z: 1.35*y**0.35,
+		verbose=True,
+		plotresults=True,
+	))
+	print("Done.")
