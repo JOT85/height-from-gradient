@@ -1,6 +1,7 @@
 import testrunner
 import math
 import testkernels as kernels
+import random
 
 class sphere:
 	def __init__(self, r, cx, cy):
@@ -32,6 +33,7 @@ def testSphere(r, noiseFunctions=(None, None), verbose=False, plot=False, plotfi
 		kernels.ykernels,
 		dfdx=s.dzdx,
 		dfdy=s.dzdy,
+		noiseFunctions=noiseFunctions,
 		verbose=verbose,
 		plotresults=plot,
 		plotfileprefix=plotfileprefix,
@@ -47,16 +49,22 @@ def testLinear(gx, gy, size, noiseFunctions=(None, None), verbose=False, plot=Fa
 		kernels.ykernels,
 		dfdx=lambda x, y, z: gx,
 		dfdy=lambda x, y, z: gy,
+		noiseFunctions=noiseFunctions,
 		verbose=verbose,
 		plotresults=plot,
 		plotfileprefix=plotfileprefix,
 	)
 	
+def randomNoise(x, y, z, d):
+	return (random.random()-0.5)*d
+	
 print(testLinear(
 	2, 2, (12, 12),
 	plot=True, plotfileprefix="linear.",
+	#noiseFunctions=(randomNoise, randomNoise),
 ))
 print(testSphere(
 	60,
 	plot=True, plotfileprefix="sphere.",
+	#noiseFunctions=(randomNoise, randomNoise),
 ))

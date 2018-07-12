@@ -74,10 +74,10 @@ def fromFunction(f, dfdx, dfdy, start, end, kernels, noiseFunctions=(None, None)
 				z = f(x, y)
 				dx = dfdx(x, y, z)
 				if noiseFunctions[0] is not None:
-					dx += noiseFunctions(x, y, z, dx)
+					dx += noiseFunctions[0](x, y, z, dx)
 				dy = dfdy(x, y, z)
 				if noiseFunctions[1] is not None:
-					dy += noiseFunctions(x, y, z, dy)
+					dy += noiseFunctions[1](x, y, z, dy)
 				#And set them if they are all finite, otherwise, exclude these coordinates from the map
 				if math.isfinite(z) and math.isfinite(dx) and math.isfinite(dy):
 					zplain[x-start[0]][y-start[1]] = z
