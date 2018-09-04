@@ -46,6 +46,18 @@ class maskwrapper:
 	def get(self, x, y):
 		"""get the index of the given coordinate (createMap must have been called first)"""
 		return self.map[x][y]
+	def getReverse(self, n):
+		"""getReverse does the opposite of get - so takes an index in the vectorized map, and returns the coordinates of that point.
+		It is not designed to be called frequently."""
+		n = n % self.count()
+		s = 0
+		for x in range(self.mask.width()):
+			for y in range(self.mask.height()):
+				if self.mask.get(x, y):
+					if s == n:
+						return (x, y)
+					s += 1
+		return (-1, -1)
 	def count(self):
 		"""Returns the total amount of pixels contained by the mask when the map was last created"""
 		return self.c
@@ -170,6 +182,20 @@ def createHeightNormMatrix(data):
 					othersY += 1
 	out.resize(data.count(), othersY)
 	return out
+
+def solveGrad(wrapper, z, xkernels, ykernels, verbose=False):
+	"""Given the mask (wrapped), height values. SolveGrad solves for the gradient map, using the given convolution kernels."""
+	if verbose: print("Generating Dx matrix...")
+	Dx = applyKernels(wrapper, xkernels)
+	if verbose: print("Generating Dy matrix...")
+	Dy = applyKernels(wrapper, ykernels)
+	if verbose: print("Generating A and b matricies...")
+	# A = [ Dx Dy ]
+	A = sparse.vstack([Dx.matrix, Dy.matrix], format="coo")
+	# b = [ Gx Gy ]
+	# Solve Az=b for z
+	if verbose: print("Solving...")
+	return A.dot(z)
 
 def solve(wrapper, gx, gy, xkernels, ykernels, verbose=False):
 	"""Given the mask (wrapped), x gradient values, and y gradient values. Solve solves for the height map, using the given convolution kernels."""

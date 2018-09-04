@@ -4,7 +4,7 @@ import numpy as np
 def toMap(mask, heights):
 	"""Creates a 2D array the dimesions of the mask, and plots the height values where they should be. Areas with no height value are set to NaN."""
 	out = np.full((mask.width(), mask.height()), np.NaN, dtype=np.float_)
-	c =  0
+	c = 0
 	for x in range(mask.width()):
 		for y in range(mask.height()):
 			if mask.get(x, y):

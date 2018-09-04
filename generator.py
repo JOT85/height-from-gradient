@@ -28,6 +28,17 @@ def toVector(p, mask, n=-1):
 				vec[n] = p[x][y]
 				n += 1
 	return vec
+	
+def generateMaskWrapper(data, kernels):
+	"""
+	Takes a map, and returns a wrapped mask, only containing points that are not NaN.
+	"""
+	mask = arraymask(len(data), len(data[0]))
+	for x in range(len(data)):
+		for y in range(len(data[x])):
+			if math.isnan(data[x][y]):
+				mask.set(x, y, False)
+	return m.maskwrapper(mask, createMap=True, kernels=kernels)
 
 def fromFunction(f, dfdx, dfdy, start, end, kernels, noiseFunctions=(None, None), mask=None, verbose=False):
 	"""
