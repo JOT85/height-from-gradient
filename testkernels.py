@@ -2,9 +2,9 @@ from kernel import kernel
 import savitzky_golay_filter as sgf
 
 xkernels1 = [
-	kernel(sgf.makeIt(71, 15, 12, 12, 1, 0)),
-	kernel(sgf.makeIt(25, 9, 12, 12, 1, 0)),
-	kernel(sgf.makeIt(21, 7, 10, 10, 1, 0)),
+	kernel(sgf.makeIt(71, 5, 12, 12, 1, 0)),
+	kernel(sgf.makeIt(25, 5, 12, 12, 1, 0)),
+	kernel(sgf.makeIt(21, 3, 10, 10, 1, 0)),
 	kernel(sgf.makeIt(9, 3, 4, 4, 1, 0)),
 	kernel(sgf.makeIt(5, 3, 2, 2, 1, 0)),
 	kernel(sgf.makeIt(3, 2, 1, 1, 1, 0)),
@@ -19,9 +19,9 @@ xkernels1 = [
 ]
 
 ykernels1 = [
-	kernel(sgf.makeIt(71, 15, 12, 12, 0, 1)),
-	kernel(sgf.makeIt(25, 9, 12, 12, 0, 1)),
-	kernel(sgf.makeIt(21, 7, 10, 10, 0, 1)),
+	kernel(sgf.makeIt(71, 5, 12, 12, 0, 1)),
+	kernel(sgf.makeIt(25, 5, 12, 12, 0, 1)),
+	kernel(sgf.makeIt(21, 3, 10, 10, 0, 1)),
 	kernel(sgf.makeIt(9, 3, 4, 4, 0, 1)),
 	kernel(sgf.makeIt(5, 3, 2, 2, 0, 1)),
 	kernel(sgf.makeIt(3, 2, 1, 1, 0, 1)),
@@ -36,6 +36,7 @@ ykernels1 = [
 ]
 
 xkernels2 = [
+	kernel(sgf.makeIt(13, 3, 4, 4, 1, 0)),
 	kernel(sgf.makeIt(9, 3, 4, 4, 1, 0)),
 	kernel(sgf.makeIt(5, 3, 2, 2, 1, 0)),
 	kernel(sgf.makeIt(3, 2, 1, 1, 1, 0)),
@@ -50,6 +51,7 @@ xkernels2 = [
 ]
 
 ykernels2 = [
+	kernel(sgf.makeIt(13, 3, 4, 4, 0, 1)),
 	kernel(sgf.makeIt(9, 3, 4, 4, 0, 1)),
 	kernel(sgf.makeIt(5, 3, 2, 2, 0, 1)),
 	kernel(sgf.makeIt(3, 2, 1, 1, 0, 1)),
